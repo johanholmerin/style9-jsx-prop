@@ -25,7 +25,7 @@ const styles = style9.create({
 ## Install
 
 ```sh
-yarn add -D git+https://github.com/johanholmerin/style9-jsx-prop#semver:^0.1.0
+yarn add -D git+https://github.com/johanholmerin/style9-jsx-prop#semver:^0.1.1
 ```
 ## Babel default options
 
