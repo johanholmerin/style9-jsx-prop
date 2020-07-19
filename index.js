@@ -30,35 +30,36 @@ module.exports = function style9JSXPropPlugin() {
   return {
     name: NAME,
     visitor: {
-      JSXAttribute(
-        path,
-        { opts: { propName = 'css', importPath = 'style9' } }
-      ) {
-        if (path.node.name.name !== propName) return;
+      Program(progPath, { opts: { propName = 'css', importPath = 'style9' } }) {
+        progPath.traverse({
+          JSXAttribute(path) {
+            if (path.node.name.name !== propName) return;
 
-        const VAR_NAME = path.scope.generateUidIdentifier('styles');
-        const STYLES = path.get('value').isJSXExpressionContainer()
-          ? path.node.value.expression
-          : path.node.value;
-        const program = path.findParent(parent => parent.isProgram());
-        const STYLE9 = program.scope.generateUidIdentifier('style9');
+            const VAR_NAME = path.scope.generateUidIdentifier('styles');
+            const STYLES = path.get('value').isJSXExpressionContainer()
+              ? path.node.value.expression
+              : path.node.value;
+            const program = path.findParent(parent => parent.isProgram());
+            const STYLE9 = program.scope.generateUidIdentifier('style9');
 
-        program.unshiftContainer('body', buildImport({ STYLE9, importPath }));
-        program.scope.registerBinding('module', program.get('body.0'));
+            program.unshiftContainer('body', buildImport({ STYLE9, importPath }));
+            program.scope.registerBinding('module', program.get('body.0'));
 
-        if (path.scope.path.type !== 'Program') {
-          path.scope.path.ensureBlock();
-        }
+            if (path.scope.path.type !== 'Program') {
+              path.scope.path.ensureBlock();
+            }
 
-        path
-          .getStatementParent()
-          .insertBefore(buildStyles({ STYLE9, VAR_NAME, STYLES }));
-        path.parentPath.pushContainer(
-          'attributes',
-          buildAttribute({ VAR_NAME })
-        );
-        path.scope.crawl();
-        path.remove();
+            path
+              .getStatementParent()
+              .insertBefore(buildStyles({ STYLE9, VAR_NAME, STYLES }));
+            path.parentPath.pushContainer(
+              'attributes',
+              buildAttribute({ VAR_NAME })
+            );
+            path.scope.crawl();
+            path.remove();
+          }
+        });
       }
     }
   };
