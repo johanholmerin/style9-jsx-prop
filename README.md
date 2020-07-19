@@ -25,14 +25,14 @@ const styles = style9.create({
 ## Install
 
 ```sh
-yarn add git+https://github.com/johanholmerin/style9-jsx-prop#semver:^0.1.0
+yarn add -D git+https://github.com/johanholmerin/style9-jsx-prop#semver:^0.1.0
 ```
 ## Babel default options
 
 ```json
 {
   "plugins": [
-    ["style9-jsx-prop", {
+    ["module:style9-jsx-prop", {
       "propName": "css",
       "importPath": "style9"
     }]
