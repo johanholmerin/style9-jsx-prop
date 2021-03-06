@@ -1,3 +1,0 @@
-<div sx={{
-  color: 'blue'
-}} />
