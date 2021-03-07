@@ -70,3 +70,12 @@ npm install -D style9-jsx-prop
   ]
 }
 ```
+
+## Typescript
+
+To get Typescript to recognize the `css` prop you need to add the following
+import once in your app.
+
+```javascript
+import {} from 'style9-jsx-prop/types';
+```
