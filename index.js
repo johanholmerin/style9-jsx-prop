@@ -79,10 +79,42 @@ function splitSpreads(objExpr) {
   return { props, keys };
 }
 
-function buildClassAttribute({ VAR_NAME, keys }) {
+function buildClassAttribute({ VAR_NAME, keys }, existingClassNameExpr) {
   return t.jsxAttribute(
     t.jsxIdentifier('className'),
-    t.jsxExpressionContainer(t.callExpression(VAR_NAME, keys))
+    t.jsxExpressionContainer(
+      !existingClassNameExpr
+        ? t.callExpression(VAR_NAME, keys)
+        : t.isStringLiteral(existingClassNameExpr)
+        ? t.templateLiteral(
+            [
+              t.templateElement(
+                {
+                  raw: `${existingClassNameExpr.value} `,
+                  cooked: `${existingClassNameExpr.value} `
+                },
+                false
+              ),
+              t.templateElement({ raw: '', cooked: '' }, true)
+            ],
+            [t.callExpression(VAR_NAME, keys)]
+          )
+        : t.templateLiteral(
+            [
+              t.templateElement({ raw: '', cooked: '' }, false),
+              t.templateElement({ raw: ' ', cooked: ' ' }, false),
+              t.templateElement({ raw: '', cooked: '' }, true)
+            ],
+            [
+              t.logicalExpression(
+                '||',
+                existingClassNameExpr,
+                t.stringLiteral('')
+              ),
+              t.callExpression(VAR_NAME, keys)
+            ]
+          )
+    )
   );
 }
 
@@ -139,10 +171,19 @@ function replaceKeyframes(objExpr, STYLE9) {
   });
 }
 
-function buildStyleAttribute(objExpr) {
+function buildStyleAttribute(objExpr, existingStyleValueExpr) {
   return t.jsxAttribute(
     t.jsxIdentifier('style'),
-    t.jsxExpressionContainer(objExpr)
+    t.jsxExpressionContainer(
+      !existingStyleValueExpr
+        ? objExpr
+        : t.objectExpression([
+            ...(t.isObjectExpression(existingStyleValueExpr)
+              ? existingStyleValueExpr.properties
+              : [t.spreadElement(existingStyleValueExpr)]),
+            ...objExpr.properties
+          ])
+    )
   );
 }
 
@@ -179,17 +220,55 @@ module.exports = function style9JSXPropPlugin() {
             replaceKeyframes(stat, STYLE9);
             const { keys, props: STYLES } = splitSpreads(stat);
 
+            const existingClassNameNode = path.container.find(
+              node => node.name && node.name.name === 'className'
+            );
+            const existingStyleNode = path.container.find(
+              node => node.name && node.name.name === 'style'
+            );
+
+            const existingClassNameExpr =
+              existingClassNameNode &&
+              (t.isJSXExpressionContainer(existingClassNameNode.value)
+                ? existingClassNameNode.value.expression
+                : existingClassNameNode.value);
+
+            const existingStyleValueExpr =
+              existingStyleNode &&
+              (t.isJSXExpressionContainer(existingStyleNode.value)
+                ? existingStyleNode.value.expression
+                : existingStyleNode.value);
+
+            const newClassNameExpr = buildClassAttribute(
+              { VAR_NAME, keys },
+              existingClassNameExpr
+            );
+
+            const newStyleExpr = buildStyleAttribute(
+              dynamic,
+              existingStyleValueExpr
+            );
+
             path
               .getStatementParent()
               .insertBefore(buildStyles({ STYLE9, VAR_NAME, STYLES }));
-            path.parentPath.pushContainer(
-              'attributes',
-              buildClassAttribute({ VAR_NAME, keys })
-            );
-            path.parentPath.pushContainer(
-              'attributes',
-              buildStyleAttribute(dynamic)
-            );
+
+            if (existingClassNameNode) {
+              path
+                .getSibling(path.container.indexOf(existingClassNameNode))
+                .replaceWith(newClassNameExpr);
+            } else {
+              path.parentPath.pushContainer('attributes', newClassNameExpr);
+            }
+
+            if (existingStyleNode) {
+              path
+                .getSibling(path.container.indexOf(existingStyleNode))
+                .replaceWith(newStyleExpr);
+            } else {
+              path.parentPath.pushContainer('attributes', newStyleExpr);
+            }
+
             path.scope.crawl();
             path.remove();
           }

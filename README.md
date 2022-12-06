@@ -7,19 +7,22 @@ a prop. Supports dynamic values using CSS custom properties.
 
 ```javascript
 // From
-<div css={{
-  color: 'blue',
-  opacity: props.hidden && 0,
-  ...(props.isRed && {
-    color: 'red'
-  }),
-  ':hover': {
-    color: props.hoverColor
-  },
-  animationName: {
-    from: { opacity: 0 }
-  }
-}} />
+<div
+  className="foo"
+  style={{ fontSize: 16 }}
+  css={{
+    color: 'blue',
+    ...(props.isRed && {
+      color: 'red'
+    }),
+    ':hover': {
+      color: props.hoverColor
+    },
+    animationName: {
+      from: { opacity: 0 }
+    }
+  }}
+/>;
 
 // To
 import style9 from 'style9';
@@ -34,18 +37,18 @@ const styles = style9.create({
       from: { opacity: 0 }
     })
   },
-  hidden: {
-    opacity: 0,
-  },
   red: {
     color: 'red',
   }
 });
 
 <div
-  className={styles('base', props.hidden && 'hidden', props.isRed && 'red')}
-  style={{ '--hover-color': props.hoverColor }}
-/>;
+  className={`foo ${styles('base', props.isRed && 'red')}`}
+  style={{
+    fontSize: 16,
+    '--hover-color': props.hoverColor
+  }}
+/>
 ```
 
 ## Install
