@@ -231,13 +231,15 @@ module.exports = function style9JSXPropPlugin() {
               existingClassNameNode &&
               (t.isJSXExpressionContainer(existingClassNameNode.value)
                 ? existingClassNameNode.value.expression
-                : existingClassNameNode.value);
+                : t.isStringLiteral(existingClassNameNode.value)
+                ? existingClassNameNode.value
+                : null);
 
             const existingStyleValueExpr =
               existingStyleNode &&
               (t.isJSXExpressionContainer(existingStyleNode.value)
                 ? existingStyleNode.value.expression
-                : existingStyleNode.value);
+                : null);
 
             const newClassNameExpr = buildClassAttribute(
               { VAR_NAME, keys },

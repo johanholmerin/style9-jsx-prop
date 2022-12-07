@@ -5,3 +5,11 @@
     color: props.color
   }}
 />;
+
+<div
+  className
+  style
+  css={{
+    color: props.color
+  }}
+/>;
